@@ -1,0 +1,8 @@
+Package: chemsw-provision
+Version: 1.0
+Section: base
+Priority: optional
+Architecture: all
+Depends: debconf (>= 1.5.0)
+Maintainer: Sosaley Technologies <operations@sosaley.in>
+Description: Chemotech IQWave device Provisioning Package

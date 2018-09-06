@@ -1,0 +1,39 @@
+#!/bin/sh
+ 
+# Exit on error
+set -e
+ 
+# Source debconf library.
+. /usr/share/debconf/confmodule
+ 
+# Ask questions
+
+db_input critical chemsw-provision-1.0/ask_serial || true
+db_go
+
+db_input critical chemsw-provision-1.0/ask_country_code || true
+db_go
+
+db_input critical chemsw-provision-1.0/ask_state_province || true
+db_go
+
+db_input critical chemsw-provision-1.0/ask_organization || true
+db_go
+
+db_input critical chemsw-provision-1.0/ask_display_resolution || true
+db_go
+
+db_input critical chemsw-provision-1.0/ask_time_zone || true
+db_go
+
+db_input critical chemsw-provision-1.0/ask_date_time || true
+db_go
+
+db_input critical chemsw-provision-1.0/ask_block_id || true
+db_go
+
+db_input critical chemsw-provision-1.0/ask_reboot_confirmation || true
+db_go
+
+# Show interface
+db_go || true

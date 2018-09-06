@@ -1,0 +1,197 @@
+#!/bin/bash
+# Bash Menu Script Example
+user="deect"
+ntp_flag="false"
+chemodrive="CHEMSW"
+udev="/etc/udev/rules.d"
+xsession="/usr/share/xsessions/lightdm-xsession.desktop"
+install_location="/home/$user"
+systemd="/etc/systemd/system/shutdown.service"
+fstab="/etc/fstab"
+uid=`id -u $user`
+gid=`id -g $user`
+write_dbcert="utrue"
+usb_installed="ufalse"
+
+if ! [[ "$PWD" =~ /mnt/IQWave-provisioning ]]; then
+echo -e "Mount USB drive in /mnt Location & navigate to IQWave-provisioning directory"
+echo -e "1) sudo mount /dev/sda1 /mnt\n2) cd /mnt/IQWave-provisioning\n3) sudo bash provisiontool/provision"
+exit 1
+fi
+#----------------Read & Validate Device Serial------------
+echo -e "\n   IQWAVE DEVICE PROVISIONING UTILITY\n"
+read -p 'Enter IQWave Device Serial no. ' serial_no
+while ! [[ $serial_no =~ ^[[:digit:]]  &&  $serial_no -lt 4294967295 ]]
+do 
+    read -p 'Wrong Device Serial no.:' serial_no
+done
+
+#----------------Read & Validate Country code------------
+read -p "Enter 2-letter Country code (ISO 3166-1 code specifier): " country_code
+while ! [[ $country_code =~ ^[a-zA-Z]{2}$ ]]
+do 
+    read -p 'Wrong Country code.:' country_code
+done
+country_code=${country_code^^}
+#------------Other Inputs---------------------------------
+read -p "Enter 4-letter State/Province code: " state_province
+state_province=${state_province:0:4}
+#state_province=${state_province^^}
+
+read -p "Enter Organization of IQWave Provisioning: " organization
+organization=${organization:0:10}
+#--------------Back-up USB drive--------------------------------
+read -r -p "Do you want to provision USB drive for Database backup [Y/n] " uresponse
+uresponse=${uresponse,,} # tolower
+if [[ $uresponse =~ ^(yes|y| ) ]] || [[ -z $uresponse ]]; then
+read -p "Plugin USB Drive for Database back-up and press Enter": VAR
+if [[ -z $VAR ]]; then 
+sleep 1.5
+avaliable_devices=`ls -l /dev/sd*|wc -l`
+while [ $avaliable_devices -lt 4 ]
+do
+  echo "USB Device not found"
+  sleep 1.5
+  if [ $(ls -l /dev/sd*|wc -l) -ge 4 ] ; then
+   break
+  fi
+done
+fi
+echo -e "\n"
+sudo blkid |grep sd*
+echo -e "\n"
+read -p 'Enter Block PARTUUID of last plugged USB drive: ' usb_blkid
+usb_installed="utrue"
+fi
+#----------------Read & Validate Display resolution------------
+read -r -p "Do you want to adjust Display resolution [Y/n] " dresponse
+ dresponse=${dresponse,,} # tolower
+ if [[ $dresponse =~ ^(yes|y| ) ]] || [[ -z $dresponse ]]; then
+	mod_resolution="yes"
+	read -p 'Enter Display resolution, [WIDTH HEIGHT] Ex.1320 768: ' display_resolution
+	while ! [[ $display_resolution =~ ^[[:digit:]]{4}\ [0-9]{3}$ ]]
+	do 
+    	read -p 'Wrong Display resolution:' display_resolution
+	done
+fi
+#----------------Confirmation for usb blacklisting------------
+read -r -p "Do you want to blacklist unknown usb devices in kernel [Y/n] " bresponse
+ bresponse=${bresponse,,} # tolower
+if [[ $bresponse =~ ^(yes|y| ) ]] || [[ -z $bresponse ]]; then
+echo -e "\n"
+lsusb
+echo -e "\n"
+read -p 'Enter 4-digit vendorID of USB stick found from corresponding manufacturer: ' usb_id
+usb_blacklist="btrue"
+fi
+#----------------Write SW version-------------------------
+read -r -p "Do you want to write IQWave Software Version [Y/n] " response
+ response=${response,,} # tolower
+ if [[ $response =~ ^(yes|y| ) ]] || [[ -z $response ]]; then
+    read -p "Enter Version without white-space." version
+    read -p "Enter Version date YYYY-MM-DD:" vdate
+while ! [[ $vdate =~ ^[[:digit:]]{4}(-[[:digit:]]{2}){2}$ ]]
+do 
+    read -p 'Wrong format, Enter as specified format YYYY-MM-DD: ' vdate
+done
+fi
+#----------------Read Menu Based time Zone-------------------
+PS3='Select Appropriate Time Zone: '
+options=("Asia/Jakarta" "Asia/Karachi" "Asia/Kolkata" "Asia/Kuala_Lumpur" "Asia/Manila" "Asia/Singapore" "Europe/London" "Europe/Oslo" "Europe/Stockholm")
+select opt in "${options[@]}"
+do
+  if { [ $REPLY -le 9 ] && [ $REPLY -ge 1 ]; } then
+	#echo "you chose choice $REPLY which is $opt"
+	time_zone=$opt
+	break
+  fi
+done
+#----------------Read & Validate Date/Time Format------------
+read -p 'Enter Local Time in specified format, YYYY-MM-DD hh:mm:ss: ' date_time
+while ! [[ $date_time =~ ^[[:digit:]]{4}(-[[:digit:]]{2}){2}\ [0-9]{2}:[0-9]{2}:[0-9]{2}$ ]]
+do 
+    read -p 'Wrong format, Enter as specified format YYYY-MM-DD hh:mm:ss: ' date_time
+done
+#------------------------------------SET TIME ZONE---------------------
+echo "setting date & time zone..."
+sudo timedatectl set-timezone $time_zone
+sudo timedatectl set-local-rtc 0
+sudo timedatectl set-ntp $ntp_flag
+sudo timedatectl set-time "$echo $date_time"
+#--------------------------------------MATCHING TEMPLATE----------------
+template='{"sys":'%d',"C":"%s","ST":"%s","O":"%s"}'
+matching_template=$(printf "$template" "$serial_no" "$country_code" "$state_province" "$organization")
+echo $matching_template
+#----------------------------Copy Extracted files to /home/deect------------
+#cp -r ./src/* $install_location
+sudo tar xvf ./provision_src.tar -C $install_location
+if [ "$usb_installed" = "utrue" ]; then
+cp ./provisiontool/backupshutdown.py $install_location
+fi
+#----------------------------CONFIGURE auto start-------------------------
+echo "configuring auto start script"
+echo -e "#!/bin/bash\npython /home/deect/iqview_app.py -f" > $install_location/start.sh
+echo -e "[Desktop Entry]\nVersion=1.0\nName=Default Xsession\nComment=Chemotech\nExec=/home/deect/start.sh\nType=Application" > $xsession
+filepresence=(`find /usr/share/xsessions/ -maxdepth 1 -name "*.desktop"`)
+if [ ${#filepresence[@]} -ge 2 ]; then 
+echo "Renaming xsessions files"
+mv /usr/share/xsessions/LXDE.desktop /usr/share/xsessions/LXDE.desktop_old
+mv /usr/share/xsessions/openbox.desktop /usr/share/xsessions/openbox.desktop_old
+fi
+#------------------------------------Modify lightdm.conf--------------------
+if grep -q Seat:0 /etc/lightdm/lightdm.conf; then
+ echo "renaming lightdm.conf"
+ sed -i "s/Seat:0/Seat:*/" /etc/lightdm/lightdm.conf
+fi
+#------------------------------------SET PERMISSIONS--------------------
+echo "Setting appropriate file permissions.."
+touch $install_location/backupshutdown.py
+sudo find $install_location -type f -print0 | xargs -0 chmod 644
+sudo find $install_location -type f -print0 | xargs -0 chown $user:$user
+sudo find $install_location -type d -print0 | xargs -0 chmod 755
+sudo find $install_location -type d -print0 | xargs -0 chown -R $user:$user
+sudo chmod a+x $install_location/start.sh
+sudo chmod a+x $install_location/backupshutdown.py
+#-------------------------------------SET PROVISIONING DATA------------
+#call provision.py
+python ./provisiontool/write_eepromdata.py $write_dbcert $matching_template $version $vdate
+#------------------------------------SET FSTAB FOR USB DRIVE--------------
+if [ "$usb_installed" = "utrue" ]; then
+echo "Enabling USB drive for backup..."
+#sudo sed -i '/UUID/d' $fstab
+sudo echo "PARTUUID=$usb_blkid /home/deect/usbbackup vfat rw,fmask=111,dmask=000,uid=$uid,gid=$gid 0 0" >> $fstab
+fi
+if [ "$usb_blacklist" = "btrue" ]; then
+cp ./provisiontool/*.rules $udev
+sed -i "s/####/$usb_id/" $udev/10-usb-nfc.rules
+fi
+#-------------------------------------SYSTEMD service script---------------
+echo "setting up service script for Database back-up"
+echo "[Unit]" > $systemd
+echo "Description=Shutdown Script for database backup" >> $systemd
+echo "[Service]" >> $systemd
+echo "Type=oneshot" >> $systemd
+echo "RemainAfterExit=true" >> $systemd
+echo "ExecStart=/bin/true" >> $systemd
+echo "ExecStop=/home/deect/backupshutdown.py" >> $systemd
+echo "[Install]" >> $systemd
+echo "WantedBy=multi-user.target" >> $systemd
+#-------------------------------------SET SCREEN RESOLUTION---------------
+if [[ "$mod_resolution" = "yes" ]] ; then
+	echo "Setting up screen resolution.." 
+	echo "hdmi_drive=1" >> /boot/config.txt
+	echo "hdmi_group=2" >> /boot/config.txt
+	echo "hdmi_mode=87" >> /boot/config.txt
+	echo "hdmi_force_hotplug=1" >> /boot/config.txt
+	if grep -q hdmi_cvt /boot/config.txt; then
+	sudo sed -i "s/hdmi_cvt.*/hdmi_cvt `echo $display_resolution` 56 3 0 0 1/" /boot/config.txt
+	else
+	echo "hdmi_cvt $display_resolution 56 3 0 0 1" >> /boot/config.txt
+	fi
+fi
+#----------------Shutdown Confirmation-------------------------
+read -r -p "IQWave device needs reboot for changes to effect [Y/n] " response
+ response=${response,,} # tolower
+ if [[ $response =~ ^(yes|y| ) ]] || [[ -z $response ]]; then
+    sudo reboot
+ fi

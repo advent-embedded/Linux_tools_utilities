@@ -1,0 +1,48 @@
+Template: chemsw-provision-1.0/ask_country_code
+Type: string
+Default: SW
+Description: Enter Country code (2-letter ISO 3166-1 code for country specifier)
+
+Template: chemsw-provision-1.0/ask_state_province
+Type: string
+Default: LUND
+Description: Enter State/Province (4-letter code specifier)
+
+Template: chemsw-provision-1.0/ask_organization
+Type: string
+Default: Army Medical Corps 
+Description: Enter Organization/Hospital
+
+Template: chemsw-provision-1.0/ask_serial
+Type: string
+Default: xxxxxxxx
+Description: Enter 8-digit IQWave Device Serial no.
+
+Template: chemsw-provision-1.0/ask_time_zone
+Type: select
+Choices: Asia/Jakarta, Asia/Karachi, Asia/Kolkata, Asia/Kuala_Lumpur, Asia/Manila, Asia/Singapore, Europe/London, Europe/Oslo, Europe/Stockholm
+Default: Europe/Stockholm
+Description: Select Time Zone of Provisioning Location:
+
+Template: chemsw-provision-1.0/ask_display_resolution
+Type: string
+Default: 1320 768
+Description: Don't change the default value unless knowning the consequences and Intention: 
+ Enter the screen resolution with caution [Width Height]
+
+Template: chemsw-provision-1.0/ask_date_time
+Type: string	
+Description: Enter Date & Time as YYYY-MM-DD hh:mm:ss
+ Enter Date/Time of current zone
+
+Template: chemsw-provision-1.0/ask_block_id
+Type: string	
+Description: Enter Block id
+ Enter Date/Time of current zone
+
+Template: chemsw-provision-1.0/ask_reboot_confirmation
+Type: select	
+Default: yes
+Choices: yes, no
+Description: IQWave device needs reboot for changes to be effected
+ Confirmation for reboot

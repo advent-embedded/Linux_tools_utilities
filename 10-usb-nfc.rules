@@ -1,0 +1,18 @@
+# Skeep not USB
+SUBSYSTEM!="usb", GOTO="authorized_usb_input_devices"
+# Skeep remove actions
+ACTION=="remove", GOTO="authorized_usb_input_devices"
+ 
+# Skipping device other than removable device
+ATTR{removable}!="removable", GOTO="authorized_usb_input_devices"
+ 
+# Whitelisting known device
+ATTR{idVendor}=="072f", ATTR{authorized}="1", GOTO="authorized_usb_input_devices"
+ATTR{idVendor}=="046d", ATTR{authorized}="1", GOTO="authorized_usb_input_devices"
+ATTR{idVendor}=="0424", ATTR{authorized}="1", GOTO="authorized_usb_input_devices"
+ATTR{idVendor}=="####", ATTR{authorized}="1", GOTO="authorized_usb_input_devices"
+
+# Disable all other USB devices
+SUBSYSTEMS=="usb", ACTION=="add", ATTR{removable}=="removable", ATTR{authorized}="0"
+ 
+LABEL="authorized_usb_input_devices"

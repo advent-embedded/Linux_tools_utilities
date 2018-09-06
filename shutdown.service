@@ -1,0 +1,9 @@
+[Unit]
+Description=Shutdown Script for database backup
+[Service]
+Type=oneshot
+RemainAfterExit=true
+ExecStart=/bin/true
+ExecStop=python /home/deect/backupshutdown.py
+[Install]
+WantedBy=multi-user.target

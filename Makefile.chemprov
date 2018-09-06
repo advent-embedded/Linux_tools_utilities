@@ -1,0 +1,26 @@
+#Name of the branch to be built for release/provisioning
+PWD := $(shell `echo pwd`)
+BUILD_DATE := $(shell date +%Y-%m-%d)
+FOLDER := IQWave-provisioning
+FOLDER_GIT=D-EECT03-JOIN_SW
+
+all: provision
+
+provision:
+	if test -d $(FOLDER); \
+	then rm -rf $(FOLDER); \
+	fi
+	@read -p "Enter name of Git branch to build Provision Software:" branch; \
+	if test ! -d $(FOLDER_GIT)_$$branch; \
+	then mkdir $(FOLDER_GIT)_$$branch; \
+	git clone -b $$branch https://github.com/Scand-Chemotech-AB/D-EECT03-JOIN_SW.git $(FOLDER_GIT)_$$branch; \
+	fi; \
+	mkdir $(FOLDER); \
+	tar cvf $(FOLDER)/provision_src.tar --directory=$(FOLDER_GIT)_$$branch/src .; \
+	cp -r provisiontool $(FOLDER)/;
+	@echo "Built $(FOLDER) "
+clean:
+	rm -rf D-EECT*
+	
+
+

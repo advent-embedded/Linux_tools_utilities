@@ -1,0 +1,101 @@
+#!/bin/bash 
+ 
+# Source debconf library.
+. /usr/share/debconf/confmodule
+
+user="sosdt0002"
+systemd="/tmp/sys.txt"
+uid=`id -u $user`
+gid=`id -g $user`
+SETOWN="sudo chown $uid:$gid"
+SETPERM="sudo chmod 0755"
+
+echo $user
+echo $SETOWN
+echo $SETPERM
+
+# Fetching configuration from debconf
+#----------------------------------------ASK USER INPUTS------------------------------
+db_get chemsw-provision-1.0/ask_serial
+serial_no=${RET:0:8}
+
+db_get chemsw-provision-1.0/ask_country_code
+country_code=${RET:0:2}
+echo $country_code
+
+db_get chemsw-provision-1.0/ask_state_province
+state_province=${RET:0:4}
+echo $state_province
+
+db_get chemsw-provision-1.0/ask_organization
+organization=${RET:0:10}
+echo $organization
+
+db_get chemsw-provision-1.0/ask_block_id
+usb_id=$RET
+echo $usb_id
+
+db_get chemsw-provision-1.0/ask_display_resolution
+screen_resolution=$RET
+echo $screen_resolution
+
+db_get chemsw-provision-1.0/ask_time_zone
+time_zone=$RET
+echo $time_zone
+
+db_get chemsw-provision-1.0/ask_date_time
+time_val=$RET
+echo $time_val
+
+db_get chemsw-provision-1.0/ask_reboot_confirmation
+reboot_ans=$RET
+echo $reboot_ans
+#-------------------------------------SET PROVISIONING DATA------------
+#call provision.py
+
+#------------------------------------SET TIME ZONE---------------------
+echo "Setting date & time zone..."
+echo "sudo timedatectl set-timezone $time_zone"
+echo "sudo timedatectl set-ntp false"
+echo "sudo timedatectl set-time `echo $time_val`"
+echo "sudo timedatectl set-local-rtc 0"
+#------------------------------------SET PERMISSIONS--------------------
+echo "Setting appropriate file permissions.."
+
+#------------------------------------SET FSTAB FOR USB DRIVE--------------
+echo "Enabling USB drive for backup..."
+#sudo echo "" > /etc/fstab_test
+sudo sed -i '/UUID/d' /etc/fstab_test
+sudo echo "UUID=$usb_id /home/deect/usbbackup vfat rw,fmask=111,dmask=000,uid=$uid,gid=$gid 0 0" >> /etc/fstab_test
+#-------------------------------------SYSTEMD service script---------------
+echo "[Unit]" > $systemd
+echo "Description=Shutdown Script for database backup" >> $systemd
+echo "[Service]" >> $systemd
+echo "Type=oneshot" >> $systemd
+echo "RemainAfterExit=true" >> $systemd
+echo "ExecStart=/bin/true" >> $systemd
+echo "ExecStop=/home/deect/backupshutdown.py" >> $systemd
+echo "[Install]" >> $systemd
+echo "WantedBy=multi-user.target" >> $systemd
+#-------------------------------------SET SCREEN RESOLUTION---------------
+echo "Setting up screen resolution.."
+sudo sed -i "s/hdmi_cvt.*/hdmi_cvt `echo $screen_resolution` 56 3 0 0 1/" /boot/config.txt
+#--------------------------------------MATCHING TEMPLATE----------------
+template='{"sys":"%s","C":"%s","ST":"%s","O":"%s"}'
+matching_template=$(printf "$template" "$serial_no" "$country_code" "$state_province" "$organization")
+echo $matching_template
+#----------------------------CONFIGURE auto start-------------------------
+echo -e "#!/bin/bash\npython /home/deect/iqview_app.py -f" > /home/$user/start.sh
+sudo $SETPERM /home/$user/start.sh
+echo -e "Comment=Chemotech\nExec=/home/deect/start.sh\n#Icon=\nType=Application" > /usr/share/xsessions/var.tmp
+#---------------------------DEVICE REBOOT---------------------------------
+status=`echo $?`
+if [ $status -ne 0 ]; then
+   echo "Errors encountered while installation!!"
+   exit -1
+fi
+
+if { [ "$reboot_ans" = "yes" ] && [ $status -eq 0 ]; } then
+    #sudo reboot
+    echo "device rebooting"
+fi
