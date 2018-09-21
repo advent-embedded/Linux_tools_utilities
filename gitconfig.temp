@@ -1,0 +1,40 @@
+[core]
+	excludesfile = /Users/Tophe/.gitignore_global
+	editor = vi
+[difftool "sourcetree"]
+	cmd = opendiff \"$LOCAL\" \"$REMOTE\"
+	path = 
+[mergetool "sourcetree"]
+	cmd = /Applications/SourceTree.app/Contents/Resources/opendiff-w.sh \"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\"
+	trustExitCode = true
+[user]
+	name = Christophe Rosset
+	email = tophe@topheman.com
+[alias]
+	st = status
+	ci = commit
+	lg = log --graph --pretty=tformat:'%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%an %ar)%Creset'
+	ll = log -10 --graph --pretty=tformat:'%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%an %ar)%Creset'
+	oops = commit --amend --no-edit
+[status]
+	showUntrackedFiles = all
+[merge]
+	conflictStyle = diff3
+	tool = p4mergetool
+[credential]
+	helper = osxkeychain
+[diff]
+	tool = p4mergetool
+	mnemonicPrefix = true
+	renames = true
+[difftool "p4mergetool"]
+	cmd = ~/Applications/p4merge.app/Contents/Resources/launchp4merge $LOCAL $REMOTE
+[mergetool "p4mergetool"]
+	cmd = ~/Applications/p4merge.app/Contents/Resources/launchp4merge $PWD/$BASE $PWD/$REMOTE $PWD/$LOCAL $PWD/$MERGED
+	trustExitCode = false
+	prompt = false
+[mergetool]
+	keepBackup = false
+[color]
+	ui = true
+

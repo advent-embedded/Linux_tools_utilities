@@ -1,0 +1,15 @@
+[user]
+	email = kannan.p@sosaley.in	
+	name = Kannan P
+[merge]
+	tool = meld
+[mergetool "meld"]
+    cmd = meld "$LOCAL" "$MERGED" "$REMOTE" --output "$MERGED"
+[mergetool]
+    keepBackup = false
+[diff]
+    tool = meld
+[difftool]
+    prompt = false
+[difftool "meld"]
+    cmd = meld "$LOCAL" "$REMOTE"
