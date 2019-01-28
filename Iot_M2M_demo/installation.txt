@@ -1,0 +1,5 @@
+sudo apt-get install build-essential python-dev python-smbus
+Dowload neccessary python modules form source links
+Change to Python module source Directory
+cd xx-yy
+sudo python setup.py install

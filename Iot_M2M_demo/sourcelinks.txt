@@ -1,0 +1,27 @@
+MAX6675 Thermocouple
+--------------------
+https://github.com/tdack/MAX6675.git
+
+
+RPi.GPIO
+--------
+https://pypi.org/project/RPi.GPIO/
+
+
+Adafruit DHT11
+--------------
+https://github.com/adafruit/Adafruit_Python_DHT.git
+
+
+Adafruit GPIO
+-------------
+https://github.com/adafruit/Adafruit_Python_GPIO.git
+
+
+MQTT Broker & Paho on Raspiberry pi Tutorial
+--------------------------------------------
+	https://tutorials-raspberrypi.com/raspberry-pi-mqtt-broker-client-wireless-communication/
+
+DHT11 Temperature Sensor
+------------------------
+	http://invent.module143.com/daskal_tutorial/raspberry-pi-3-gpio-dht11-digital-temperature-humidity-sensor/
